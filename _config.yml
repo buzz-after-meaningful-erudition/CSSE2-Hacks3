@@ -3,7 +3,7 @@ description: "Class of 2025"
 owner_name: John Mortensen
 github_username: jm1021 
 github_repo: "CSSE2-Hacks3" 
-baseurl: "" 
+baseurl: "/CSSE2-Hacks3/" 
 future: true
 remote_theme: jekyll/minima
 minima:
