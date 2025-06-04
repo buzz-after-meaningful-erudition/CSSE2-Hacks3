@@ -4,7 +4,7 @@ import Player from './GameEngine/Player.js';
 import Npc from './GameEngine/Npc.js';  // Direct import for portal creation
 import Collectible from './GameEngine/Collectible.js';
 import Quiz from './Quiz.js';
-import Game from './Game.js';
+import Game from './GameEngine/Game.js';
 import Enemy from './GameEngine/Enemy.js';
 import DialogueSystem from './DialogueSystem.js';
 
@@ -662,12 +662,10 @@ class GameLevelEnd {
   
   // Create the standalone stopwatch - positioned to the left of balance container
   createStandaloneStopwatch() {
-    console.log("Creating stopwatch");
     
     // Get the stats container to position timer relative to it
     const statsContainer = document.getElementById('stats-container');
     if (!statsContainer) {
-      console.error("Stats container not found, delaying timer creation");
       setTimeout(() => this.createStandaloneStopwatch(), 200);
       return;
     }
