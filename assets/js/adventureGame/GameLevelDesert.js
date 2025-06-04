@@ -2,7 +2,6 @@
 import GamEnvBackground from './GameEngine/GameEnvBackground.js';
 import Player from './GameEngine/Player.js';
 import Npc from './GameEngine/Npc.js';
-import Quiz from './Quiz.js';
 import DialogueSystem from './DialogueSystem.js';
 import GameControl from './GameEngine/GameControl.js';
 import GameLevelStarWars from './GameLevelStarWars.js';
