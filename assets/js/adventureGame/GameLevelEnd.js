@@ -3,7 +3,6 @@ import BackgroundParallax from './GameEngine/BackgroundParallax.js';
 import Player from './GameEngine/Player.js';
 import Npc from './GameEngine/Npc.js';  // Direct import for portal creation
 import Collectible from './GameEngine/Collectible.js';
-import Quiz from './Quiz.js';
 import Game from './GameEngine/Game.js';
 import Enemy from './GameEngine/Enemy.js';
 import DialogueSystem from './DialogueSystem.js';
