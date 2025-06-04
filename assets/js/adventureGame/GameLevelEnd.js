@@ -662,12 +662,10 @@ class GameLevelEnd {
   
   // Create the standalone stopwatch - positioned to the left of balance container
   createStandaloneStopwatch() {
-    console.log("Creating stopwatch");
     
     // Get the stats container to position timer relative to it
     const statsContainer = document.getElementById('stats-container');
     if (!statsContainer) {
-      console.error("Stats container not found, delaying timer creation");
       setTimeout(() => this.createStandaloneStopwatch(), 200);
       return;
     }
