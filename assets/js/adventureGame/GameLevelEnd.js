@@ -3,7 +3,6 @@ import BackgroundParallax from './GameEngine/BackgroundParallax.js';
 import Player from './GameEngine/Player.js';
 import Npc from './GameEngine/Npc.js';  // Direct import for portal creation
 import Collectible from './GameEngine/Collectible.js';
-import Quiz from './Quiz.js';
 import Game from './GameEngine/Game.js';
 import Enemy from './GameEngine/Enemy.js';
 import DialogueSystem from './DialogueSystem.js';
@@ -23,6 +22,7 @@ class GameLevelEnd {
     this.endTime = null;
     this.startTime = Date.now();
     this.gameCompleted = false;
+    this.victoryScreenShown = false;  // Add flag for victory screen
     
     // Initialize the dialogue system
     this.dialogueSystem = new DialogueSystem();
@@ -435,12 +435,6 @@ class GameLevelEnd {
                     const finalTime = self.currentTime;
                     const formattedTime = self.formatTime(finalTime);
                     
-                    // Update timer display
-                    const timerDisplay = document.getElementById('game-timer');
-                    if (timerDisplay) {
-                        timerDisplay.innerHTML = `<span style="color: #00FFFF">COMPLETED: ${formattedTime}</span>`;
-                    }
-                    
                     // Check for new record
                     const bestTime = localStorage.getItem('bestTime');
                     let isNewRecord = false;
@@ -448,23 +442,10 @@ class GameLevelEnd {
                     if (!bestTime || finalTime < parseFloat(bestTime)) {
                         localStorage.setItem('bestTime', finalTime.toString());
                         isNewRecord = true;
-                        
-                        // Show new record animation
-                        if (timerDisplay) {
-                            timerDisplay.innerHTML = `<span style="color: gold">NEW RECORD! ${formattedTime}</span>`;
-                            setTimeout(() => {
-                                timerDisplay.innerHTML = `<span style="color: #00FFFF">COMPLETED: ${formattedTime}</span>`;
-                            }, 3000);
-                        }
                     }
                     
-                    // Update UI with completion message
-                    self.showCompletionMessage(isNewRecord);
-                    
-                    // Create the portal with slight delay
-                    setTimeout(() => {
-                        self.createDOMPortal();
-                    }, 1000);
+                    // Show victory screen
+                    self.showVictoryScreen(finalTime, isNewRecord);
                 }
             }
         }
@@ -662,12 +643,10 @@ class GameLevelEnd {
   
   // Create the standalone stopwatch - positioned to the left of balance container
   createStandaloneStopwatch() {
-    console.log("Creating stopwatch");
     
     // Get the stats container to position timer relative to it
     const statsContainer = document.getElementById('stats-container');
     if (!statsContainer) {
-      console.error("Stats container not found, delaying timer creation");
       setTimeout(() => this.createStandaloneStopwatch(), 200);
       return;
     }
@@ -918,6 +897,128 @@ class GameLevelEnd {
     setTimeout(() => {
       floatingPoints.remove();
     }, 1500);
+  }
+
+  // Add new method for victory screen
+  showVictoryScreen(finalTime, isNewRecord) {
+    if (this.victoryScreenShown) return; // Prevent multiple victory screens
+    this.victoryScreenShown = true;
+
+    // Create victory screen container
+    const victoryScreen = document.createElement('div');
+    victoryScreen.style.position = 'fixed';
+    victoryScreen.style.top = '0';
+    victoryScreen.style.left = '0';
+    victoryScreen.style.width = '100%';
+    victoryScreen.style.height = '100%';
+    victoryScreen.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+    victoryScreen.style.display = 'flex';
+    victoryScreen.style.flexDirection = 'column';
+    victoryScreen.style.alignItems = 'center';
+    victoryScreen.style.justifyContent = 'center';
+    victoryScreen.style.zIndex = '9999';
+    victoryScreen.style.color = 'white';
+    victoryScreen.style.fontFamily = "'Press Start 2P', sans-serif";
+    victoryScreen.style.textAlign = 'center';
+    victoryScreen.style.animation = 'fadeIn 1s ease-out';
+
+    // Add victory title
+    const title = document.createElement('h1');
+    title.textContent = 'VICTORY!';
+    title.style.fontSize = '48px';
+    title.style.color = '#00FFFF';
+    title.style.textShadow = '0 0 20px rgba(0, 255, 255, 0.7)';
+    title.style.marginBottom = '30px';
+    title.style.animation = 'pulse 2s infinite';
+
+    // Add completion time
+    const timeDisplay = document.createElement('div');
+    timeDisplay.textContent = `Time: ${this.formatTime(finalTime)}`;
+    timeDisplay.style.fontSize = '24px';
+    timeDisplay.style.marginBottom = '20px';
+    timeDisplay.style.color = isNewRecord ? 'gold' : '#4a86e8';
+
+    // Add new record message if applicable
+    if (isNewRecord) {
+      const recordMsg = document.createElement('div');
+      recordMsg.textContent = 'NEW RECORD!';
+      recordMsg.style.fontSize = '28px';
+      recordMsg.style.color = 'gold';
+      recordMsg.style.marginBottom = '20px';
+      recordMsg.style.animation = 'blink 1s infinite';
+    }
+
+    // Add continue button
+    const continueBtn = document.createElement('button');
+    continueBtn.textContent = 'Continue';
+    continueBtn.style.padding = '15px 30px';
+    continueBtn.style.fontSize = '20px';
+    continueBtn.style.backgroundColor = '#4a86e8';
+    continueBtn.style.color = 'white';
+    continueBtn.style.border = 'none';
+    continueBtn.style.borderRadius = '5px';
+    continueBtn.style.cursor = 'pointer';
+    continueBtn.style.transition = 'all 0.3s ease';
+    continueBtn.style.marginTop = '30px';
+
+    // Add hover effect
+    continueBtn.onmouseover = () => {
+      continueBtn.style.backgroundColor = '#357abd';
+      continueBtn.style.transform = 'scale(1.1)';
+    };
+    continueBtn.onmouseout = () => {
+      continueBtn.style.backgroundColor = '#4a86e8';
+      continueBtn.style.transform = 'scale(1)';
+    };
+
+    // Add click handler
+    continueBtn.onclick = () => {
+      victoryScreen.remove();
+      this.createDOMPortal();
+    };
+
+    // Add animations
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+      }
+      @keyframes blink {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Assemble victory screen
+    victoryScreen.appendChild(title);
+    victoryScreen.appendChild(timeDisplay);
+    if (isNewRecord) {
+      victoryScreen.appendChild(recordMsg);
+    }
+    victoryScreen.appendChild(continueBtn);
+    document.body.appendChild(victoryScreen);
+
+    // Stop the game loop
+    if (this.gameEnv && this.gameEnv.gameControl) {
+      if (this.gameEnv.gameControl.gameLoop) {
+        cancelAnimationFrame(this.gameEnv.gameControl.gameLoop);
+      }
+      // Disable player movement
+      const players = this.gameEnv.gameObjects.filter(obj => obj.constructor.name === 'Player');
+      players.forEach(player => {
+        if (player.keypress) {
+          player.keypress = null; // Disable key controls
+        }
+      });
+    }
   }
 }
 

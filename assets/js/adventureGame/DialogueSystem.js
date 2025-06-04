@@ -7,8 +7,8 @@ class DialogueSystem {
     // Default dialogue arrays
     this.dialogues = options.dialogues || [
       "You've come far, traveler. The skies whisper your name.",
-      "The End holds secrets only the brave dare uncover.",
-      "Retrieve the elytra and embrace your destiny!"
+      "Generic quote here. This is a fallback default dialogue.",
+      "This is generic basic dialogue. If you're expecting something specific, please check your code."
     ];
     
     this.id = options.id || "dialogue_" + Math.random().toString(36).substr(2, 9);
