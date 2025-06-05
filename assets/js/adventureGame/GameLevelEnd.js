@@ -3,7 +3,6 @@ import BackgroundParallax from './GameEngine/BackgroundParallax.js';
 import Player from './GameEngine/Player.js';
 import Npc from './GameEngine/Npc.js';  // Direct import for portal creation
 import Collectible from './GameEngine/Collectible.js';
-import Quiz from './Quiz.js';
 import Game from './GameEngine/Game.js';
 import Enemy from './GameEngine/Enemy.js';
 import DialogueSystem from './DialogueSystem.js';
@@ -23,6 +22,7 @@ class GameLevelEnd {
     this.endTime = null;
     this.startTime = Date.now();
     this.gameCompleted = false;
+    this.victoryScreenShown = false;  // Add flag for victory screen
     
     // Initialize the dialogue system
     this.dialogueSystem = new DialogueSystem();
@@ -295,7 +295,7 @@ class GameLevelEnd {
           "The end ship looms before you...",
           "The end ship seems to beckon you to loot the treasure within...",
           "funny purple spaceship heheheheheh",
-          "Press 'M' to enter the ship's adventure...",
+          "Press 'E' to enter the ship's adventure...",
           // Add more later?
         ],
         reaction: function() {
@@ -303,7 +303,7 @@ class GameLevelEnd {
         },
         interact: function() {
           dialogueSystem.showRandomDialogue(); // Using Dialogue system instead of alert
-          // Add event listener for 'm' key press during interaction
+          // Add event listener for 'e' key press during interaction
           const handleKeyPress = (event) => {
             if (event.key.toLowerCase() === 'e') {
               // Remove the event listener to prevent multiple bindings
@@ -347,7 +347,7 @@ class GameLevelEnd {
             "This Eye of Ender whispers secrets of distant realms."
         ],
         reaction: function() {
-            // Silent reaction, dialogue only apepars on interaction
+            // Silent reaction, dialogue only appears on interaction
         },
         interact: function() {
             // IMPORTANT: First check if the player is actually near the eye
@@ -428,18 +428,12 @@ class GameLevelEnd {
                 // Handle game completion logic
                 self.gameCompleted = true;
                 
+                // Stop the timer
                 if (self.timerInterval) {
                     clearInterval(self.timerInterval);
                     
-                    // Calculate and format final time
+                    // Calculate final time
                     const finalTime = self.currentTime;
-                    const formattedTime = self.formatTime(finalTime);
-                    
-                    // Update timer display
-                    const timerDisplay = document.getElementById('game-timer');
-                    if (timerDisplay) {
-                        timerDisplay.innerHTML = `<span style="color: #00FFFF">COMPLETED: ${formattedTime}</span>`;
-                    }
                     
                     // Check for new record
                     const bestTime = localStorage.getItem('bestTime');
@@ -448,23 +442,12 @@ class GameLevelEnd {
                     if (!bestTime || finalTime < parseFloat(bestTime)) {
                         localStorage.setItem('bestTime', finalTime.toString());
                         isNewRecord = true;
-                        
-                        // Show new record animation
-                        if (timerDisplay) {
-                            timerDisplay.innerHTML = `<span style="color: gold">NEW RECORD! ${formattedTime}</span>`;
-                            setTimeout(() => {
-                                timerDisplay.innerHTML = `<span style="color: #00FFFF">COMPLETED: ${formattedTime}</span>`;
-                            }, 3000);
-                        }
                     }
                     
-                    // Update UI with completion message
-                    self.showCompletionMessage(isNewRecord);
-                    
-                    // Create the portal with slight delay
+                    // Show victory screen instead of creating portal
                     setTimeout(() => {
-                        self.createDOMPortal();
-                    }, 1000);
+                        self.showVictoryScreen(finalTime, isNewRecord);
+                    }, 1000); // Small delay to let the final eye collection animation finish
                 }
             }
         }
@@ -495,168 +478,6 @@ class GameLevelEnd {
     if (this.gameEnv) {
         this.gameEnv.gameControl = gameEnv.gameControl;
         this.gameEnv.game = gameEnv.game;
-    }
-  }
-  
-  // Create portal to return to desert
-  createDOMPortal() {
-        console.log("Creating DOM portal element");
-        
-        // Get screen dimensions
-        const screenWidth = window.innerWidth;
-        const screenHeight = window.innerHeight;
-        
-        // Define portal position (customize to move it to end island)
-        const portalX = screenWidth * 0.85; // 80% from the left (right side)
-        const portalY = screenHeight * 0.45; // 30% from the top (upper area)
-        
-        const portal = document.createElement('div');
-        portal.id = 'dom-portal';
-        
-        // Add necessary properties for collision handling
-        portal.spriteData = {
-            id: 'End Portal',
-            greeting: "Return to Desert?",
-            src: "./images/gamify/exitportalfull.png"
-        };
-        
-        // Position the portal at custom coordinates
-        portal.style.position = 'fixed';
-        portal.style.top = `${portalY}px`;
-        portal.style.left = `${portalX}px`;
-        portal.style.transform = 'translate(-50%, -50%)';
-        
-        portal.style.width = '50px';
-        portal.style.height = '50px';
-        
-        // FIX: use this.gameEnv.path instead of path
-        if (this.gameEnv && this.gameEnv.path) {
-            portal.style.backgroundImage = `url('${this.gameEnv.path}/images/gamify/exitportalfull.png')`;
-        } else {
-            // Fallback to a relative path if gameEnv.path is not available
-            portal.style.backgroundImage = "url('./images/gamify/exitportalfull.png')";
-            console.warn("Warning: gameEnv.path is not available, using relative path");
-        }
-        
-        portal.style.backgroundSize = 'contain';
-        portal.style.backgroundRepeat = 'no-repeat';
-        portal.style.backgroundPosition = 'center';
-        portal.style.zIndex = '999';
-        portal.style.cursor = 'pointer';
-        
-        // Add an instruction overlay
-        const instructions = document.createElement('div');
-        instructions.style.position = 'absolute';
-        instructions.style.bottom = '-40px';
-        instructions.style.left = '0';
-        instructions.style.width = '100%';
-        instructions.style.textAlign = 'center';
-        instructions.style.color = 'white';
-        instructions.style.fontSize = '14px';
-        instructions.style.padding = '5px';
-        instructions.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-        instructions.style.borderRadius = '5px';
-        instructions.textContent = 'Return to Desert';
-        
-        portal.appendChild(instructions);
-        
-        // Add click event to return to desert
-        portal.addEventListener('click', () => {
-            // Clean up any existing game objects
-            if (this.gameEnv) {
-                this.gameEnv.destroy();
-            }
-            
-            // Try to use gameControl if available
-            if (this.gameEnv && this.gameEnv.gameControl) {
-                // Set the level index to 0 (Desert level)
-                this.gameEnv.gameControl.currentLevelIndex = 0;
-                
-                // Stop the current game loop
-                if (this.gameEnv.gameControl.gameLoop) {
-                    cancelAnimationFrame(this.gameEnv.gameControl.gameLoop);
-                }
-                
-                // Transition to the desert level
-                this.gameEnv.gameControl.transitionToLevel();
-            } else {
-                // Fallback: reload the page
-                location.reload();
-            }
-        });
-        
-        // Add portal appearance effect
-        portal.style.opacity = '0';
-        portal.style.transform = 'translate(-50%, -50%) scale(0.1)';
-        portal.style.transition = 'all 1s ease-out';
-        
-        document.body.appendChild(portal);
-        
-        // Animate portal appearance
-        setTimeout(() => {
-            portal.style.opacity = '1';
-            portal.style.transform = 'translate(-50%, -50%) scale(1)';
-            
-            // Add pulsating glow effect
-            const glowAnimation = document.createElement('style');
-            glowAnimation.innerHTML = `
-                @keyframes portalPulse {
-                    0% { box-shadow: 0 0 20px rgba(138, 43, 226, 0.7); }
-                    50% { box-shadow: 0 0 50px rgba(138, 43, 226, 0.9); }
-                    100% { box-shadow: 0 0 20px rgba(138, 43, 226, 0.7); }
-                }
-            `;
-            document.head.appendChild(glowAnimation);
-            
-            portal.style.animation = 'portalPulse 2s infinite';
-        }, 100);
-    }
-  
-  // Show completion message on the eye counter
-  showCompletionMessage(isNewRecord) {
-    const counterContainer = document.getElementById('eye-counter-container');
-    const counterText = document.getElementById('eye-counter');
-    
-    if (counterContainer && counterText) {
-      // Update counter text
-      counterText.textContent = `12/12 - ALL COLLECTED!`;
-      counterText.style.color = '#00FFFF';
-      
-      // Add new record message if applicable
-      if (isNewRecord) {
-        const recordMsg = document.createElement('div');
-        recordMsg.textContent = "NEW RECORD!";
-        recordMsg.style.color = 'gold';
-        recordMsg.style.fontWeight = 'bold';
-        recordMsg.style.fontSize = '14px';
-        recordMsg.style.marginTop = '5px';
-        recordMsg.style.textAlign = 'center';
-        counterContainer.appendChild(recordMsg);
-        
-        // Animate the message
-        recordMsg.style.animation = 'blink 1s infinite';
-        const style = document.createElement('style');
-        if (!document.getElementById('blink-animation')) {
-          style.id = 'blink-animation';
-          style.innerHTML = `
-            @keyframes blink {
-              0% { opacity: 1; }
-              50% { opacity: 0.5; }
-              100% { opacity: 1; }
-            }
-          `;
-          document.head.appendChild(style);
-        }
-      }
-      
-      // Add instruction for portal
-      const portalMsg = document.createElement('div');
-      portalMsg.textContent = "Click portal to return";
-      portalMsg.style.color = 'white';
-      portalMsg.style.fontSize = '12px';
-      portalMsg.style.marginTop = '5px';
-      portalMsg.style.textAlign = 'center';
-      counterContainer.appendChild(portalMsg);
     }
   }
   
@@ -725,6 +546,7 @@ class GameLevelEnd {
     const tenths = Math.floor((seconds * 10) % 10);
     return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}.${tenths}`;
   }
+  
   // Create a UI counter for the eyes
   createEyeCounter() {
     const counterContainer = document.createElement('div');
@@ -846,7 +668,6 @@ class GameLevelEnd {
     this.showFloatingPoints(amount);
   }
   
-  // Update balance on server
   updateServerBalance(personId, amount) {
     // Check if Game and fetchOptions are available
     if (!Game.javaURI || !Game.fetchOptions) {
